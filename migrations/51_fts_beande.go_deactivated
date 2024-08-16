@@ -1,0 +1,58 @@
+package migrations
+
+import (
+	"io/fs"
+	"strings"
+
+	"github.com/Simon-Martens/pocketcatalog_backend/migrations/helpers"
+	"github.com/Simon-Martens/pocketcatalog_backend/queries"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/migrations"
+)
+
+func init() {
+
+	migrations.Register(func(db dbx.Builder) error {
+		err := exec_keyword(queries.MusenalmQueries, helpers.CREATE_KEYWORD, db)
+		if err != nil {
+			return err
+		}
+
+		err = exec_keyword(queries.MusenalmQueries, helpers.INSERT_KEYWORD, db)
+		if err != nil {
+			return err
+		}
+
+		// TODO: Triggers
+		return nil
+	}, func(db dbx.Builder) error {
+		err := exec_keyword(queries.MusenalmQueries, helpers.DROP_KEYWORD, db)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func exec_keyword(files fs.FS, keyword string, db dbx.Builder) error {
+	dir, err := fs.ReadDir(files, ".")
+	if err != nil {
+		return err
+	}
+
+	for _, f := range dir {
+		if !f.IsDir() && strings.HasPrefix(f.Name(), keyword) {
+			content, err := fs.ReadFile(files, f.Name())
+			if err != nil {
+				return err
+			}
+			_, err = db.NewQuery(string(content)).Execute()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}

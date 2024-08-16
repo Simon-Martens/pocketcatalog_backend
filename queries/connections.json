@@ -1,0 +1,6 @@
+[
+    {
+        "url": "sqlite:/home/simon/source/musenalm-backend/pb_data/data.db",
+        "name": "Musenalm"
+    }
+]
